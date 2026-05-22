@@ -4,13 +4,13 @@ const app = express();
 
 app.use(express.json());
 
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHibCtMpA45wVMtp8p76NDlTAmdmXtrHuuSQC84ID2D8F0pWuJyEVWKCsHvWhbNWZJ5A/exec';
+
 // SESSION MANAGER
 const sessions = {};
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHibCtMpA45wVMtp8p76NDlTAmdmXtrHuuSQC84ID2D8F0pWuJyEVWKCsHvWhbNWZJ5A/exec';
-
 app.get('/', (req, res) => {
-  res.json({ ok: true, mensaje: 'EDOAI Core v3.0.0', version: '3.0.0' });
+  res.json({ ok: true, mensaje: 'EDOAI Core v4.0.0', version: '4.0.0' });
 });
 
 // Guardar variable en sesión
@@ -38,35 +38,37 @@ app.get('/session/clear', (req, res) => {
   res.json({ ok: true, phone, mensaje: 'Sesión limpiada' });
 });
 
-// REGISTRAR OPERACIÓN — puente al Apps Script
-app.get('/registrar', async (req, res) => {
-  const { phone, servicio, valor, metodo_pago, observacion } = req.query;
-
-  // Obtener detalle exacto de la sesión
-  const detalle = sessions[phone]?.detalle || '';
-
+// RESUMEN DEL DÍA — llama al Apps Script y devuelve el texto directamente
+app.get('/resumen', async (req, res) => {
   try {
     const response = await axios.get(APPS_SCRIPT_URL, {
-      params: {
-        accion: 'registrar',
-        servicio: servicio || '',
-        valor: valor || '0',
-        metodo_pago: metodo_pago || '',
-        observacion: observacion || '',
-        detalle: detalle
-      }
+      params: { accion: 'resumen' }
     });
-
-    // Limpiar el detalle de la sesión después de registrar
-    if (sessions[phone]) delete sessions[phone].detalle;
-
-    res.json({ ok: true, resultado: response.data });
+    const data = response.data;
+    if (data.ok) {
+      res.send(data.answer);
+    } else {
+      res.send('⚠️ No hay registros para hoy.');
+    }
   } catch (err) {
-    res.json({ ok: false, error: err.message });
+    res.send('⚠️ Error al obtener el resumen. Intente nuevamente.');
+  }
+});
+
+// NOTIFICACIÓN — envía resumen al WhatsApp del usuario via BBC
+app.get('/notificar-resumen', async (req, res) => {
+  try {
+    const response = await axios.get(APPS_SCRIPT_URL, {
+      params: { accion: 'resumen' }
+    });
+    const data = response.data;
+    res.json({ ok: true, answer: data.answer || '⚠️ Sin registros hoy.' });
+  } catch (err) {
+    res.json({ ok: false, answer: '⚠️ Error al obtener el resumen.' });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`EDOAI Core v3.0.0 corriendo en puerto ${PORT}`);
+  console.log(`EDOAI Core v4.0.0 corriendo en puerto ${PORT}`);
 });
