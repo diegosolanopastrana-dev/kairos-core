@@ -181,6 +181,95 @@ app.get('/dashboard/informe-mensual', async (req, res) => {
     res.send('<h3>Error al generar el informe. Intente nuevamente.</h3>');
   }
 });
+// PDF INFORME MENSUAL
+const PDFDocument = require('pdfkit');
+
+app.get('/pdf/informe-mensual', async (req, res) => {
+  try {
+    const mes = req.query.mes || '';
+    const anio = req.query.anio || '';
+    const response = await axios.get(APPS_SCRIPT_URL, {
+      params: { accion: 'informe_mensual', mes, anio }
+    });
+    const d = response.data;
+    if (!d.ok) return res.status(500).send('Error al obtener datos.');
+
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=informe-${d.mes}-${d.anio}.pdf`);
+    doc.pipe(res);
+
+    // Encabezado
+    doc.fontSize(20).fillColor('#2c3e50').text('EDOAI — Sistema Parroquial', { align: 'center' });
+    doc.fontSize(14).fillColor('#7f8c8d').text(`Informe Mensual — ${d.mes} ${d.anio}`, { align: 'center' });
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ecf0f1').stroke();
+    doc.moveDown();
+
+    // Sacramentos
+    doc.fontSize(12).fillColor('#2c3e50').text('SACRAMENTOS', { underline: true });
+    doc.moveDown(0.5);
+    const sacramentos = [
+      ['✝ Bautismos', d.detalle.bautismos.total],
+      ['🕊 Confirmaciones', d.detalle.confirmaciones.total],
+      ['💍 Matrimonios', d.detalle.matrimonios.total],
+      ['⚰ Defunciones', d.detalle.defunciones.total],
+      ['TOTAL', d.total_sacramentos]
+    ];
+    sacramentos.forEach(([label, valor]) => {
+      const esTotsl = label === 'TOTAL';
+      doc.fontSize(esTotsl ? 12 : 11)
+         .fillColor(esTotsl ? '#2c3e50' : '#555')
+         .text(label, 60, doc.y, { continued: true, width: 300 })
+         .fillColor(esTotsl ? '#27ae60' : '#2c3e50')
+         .text(String(valor), { align: 'right' });
+    });
+    doc.moveDown();
+
+    // Ingresos
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ecf0f1').stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#2c3e50').text('INGRESOS DEL MES', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(14).fillColor('#27ae60')
+       .text(`$${d.total_ingresos.toLocaleString('es-CO')}`, { align: 'center' });
+    doc.moveDown();
+
+    // Pendientes
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ecf0f1').stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor('#2c3e50').text('PENDIENTES DE ARCHIVO', { underline: true });
+    doc.moveDown(0.5);
+    const pendientes = [
+      ['Bautismos', d.detalle.bautismos.pendientes],
+      ['Confirmaciones', d.detalle.confirmaciones.pendientes],
+      ['Matrimonios', d.detalle.matrimonios.pendientes],
+      ['Defunciones', d.detalle.defunciones.pendientes],
+      ['TOTAL', d.total_pendientes]
+    ];
+    pendientes.forEach(([label, valor]) => {
+      const esTotsl = label === 'TOTAL';
+      doc.fontSize(esTotsl ? 12 : 11)
+         .fillColor(esTotsl ? '#2c3e50' : '#555')
+         .text(label, 60, doc.y, { continued: true, width: 300 })
+         .fillColor(valor > 0 ? '#e74c3c' : '#27ae60')
+         .text(String(valor), { align: 'right' });
+    });
+    doc.moveDown();
+
+    // Pie de página
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ecf0f1').stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(9).fillColor('#bdc3c7')
+       .text(`Generado por EDOAI · ${new Date().toLocaleDateString('es-CO')}`, { align: 'center' });
+
+    doc.end();
+
+  } catch (err) {
+    console.error('Error PDF:', err.message);
+    res.status(500).send('Error al generar el PDF.');
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`EDOAI Core v4.0.0 corriendo en puerto ${PORT}`);
