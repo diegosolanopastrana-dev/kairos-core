@@ -67,7 +67,21 @@ app.get('/notificar-resumen', async (req, res) => {
     res.json({ ok: false, answer: '⚠️ Error al obtener el resumen.' });
   }
 });
-
+// RESUMEN TEXTO PLANO — BBC puede mostrar directamente sin messageMapping
+app.get('/resumen-texto', async (req, res) => {
+  try {
+    const response = await axios.get(APPS_SCRIPT_URL, {
+      params: { accion: 'resumen' }
+    });
+    const data = response.data;
+    const texto = data.answer || '⚠️ Sin registros para hoy.';
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(texto);
+  } catch (err) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send('⚠️ Error al obtener el resumen. Intente nuevamente.');
+  }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`EDOAI Core v4.0.0 corriendo en puerto ${PORT}`);
