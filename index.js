@@ -67,19 +67,22 @@ app.get('/notificar-resumen', async (req, res) => {
     res.json({ ok: false, answer: '⚠️ Error al obtener el resumen.' });
   }
 });
-// RESUMEN TEXTO PLANO — BBC puede mostrar directamente sin messageMapping
+// RESUMEN — devuelve JSON con campo body para BBC
 app.get('/resumen-texto', async (req, res) => {
   try {
     const response = await axios.get(APPS_SCRIPT_URL, {
       params: { accion: 'resumen' }
     });
     const data = response.data;
-    const texto = data.answer || '⚠️ Sin registros para hoy.';
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.send(texto);
+    res.json({
+      ok: true,
+      body: data.answer || '⚠️ Sin registros hoy.'
+    });
   } catch (err) {
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.send('⚠️ Error al obtener el resumen. Intente nuevamente.');
+    res.json({
+      ok: false,
+      body: '⚠️ Error al obtener el resumen.'
+    });
   }
 });
 const PORT = process.env.PORT || 3000;
