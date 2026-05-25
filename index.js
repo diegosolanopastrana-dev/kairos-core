@@ -154,7 +154,10 @@ app.get('/dashboard/informe-mensual', async (req, res) => {
 <body>
 <div class="card">
   <h1>📊 Informe Mensual</h1>
-  <div class="sub">${d.mes} ${d.anio} · ${d.total_sacramentos} sacramentos registrados</div>
+<div class="sub">${d.mes} ${d.anio} · ${d.total_sacramentos} sacramentos registrados</div>
+  <div style="text-align:center;margin:16px 0;">
+    <a href="/pdf/informe-mensual" target="_blank" style="background:#27ae60;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;">📄 Descargar PDF</a>
+  </div>
   <div class="seccion">
     <h2>Sacramentos</h2>
     <div class="fila"><span>✝️ Bautismos</span><span class="valor">${d.detalle.bautismos.total}</span></div>
