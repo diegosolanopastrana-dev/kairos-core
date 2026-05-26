@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const { identificarUsuario } = require('./middleware/auth');
 const app = express();
 
 app.use(express.json());
@@ -278,6 +279,15 @@ app.get('/pdf/informe-mensual', async (req, res) => {
     console.error('Error PDF:', err.message);
     res.status(500).send('Error al generar el PDF.');
   }
+});
+// IDENTIFICAR USUARIO — Middleware de identidad
+app.get('/identificar', async (req, res) => {
+  const telefono = req.query.telefono || req.query.numero || '';
+  if (!telefono) {
+    return res.json({ ok: false, error: 'TELEFONO_REQUERIDO' });
+  }
+  const resultado = await identificarUsuario(telefono);
+  res.json(resultado);
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
