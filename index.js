@@ -38,18 +38,25 @@ app.get('/session/clear', (req, res) => {
 app.get('/identificar', async (req, res) => {
   const telefono = req.query.telefono || req.query.numero || '';
   if (!telefono) return res.json({ ok: false, rol: 'DESCONOCIDO', error: 'TELEFONO_REQUERIDO' });
-  const resultado = await obtenerContextoUsuario(telefono);
-  if (resultado.ok) {
-    res.json({
-      ok: true,
-      rol: resultado.rol,
-      nombre: resultado.nombre,
-      usuario_id: resultado.usuario_id,
-      parroquia_id: resultado.parroquia_id,
-      diocesis: resultado.diocesis
-    });
-  } else {
-    res.json({ ok: false, rol: 'DESCONOCIDO', error: resultado.error });
+  try {
+    console.log('Identificando:', telefono);
+    const resultado = await obtenerContextoUsuario(telefono);
+    console.log('Resultado:', JSON.stringify(resultado));
+    if (resultado.ok) {
+      res.json({
+        ok: true,
+        rol: resultado.rol,
+        nombre: resultado.nombre,
+        usuario_id: resultado.usuario_id,
+        parroquia_id: resultado.parroquia_id,
+        diocesis: resultado.diocesis
+      });
+    } else {
+      res.json({ ok: false, rol: 'DESCONOCIDO', error: resultado.error });
+    }
+  } catch (err) {
+    console.error('Error identificar:', err.message);
+    res.json({ ok: false, error: err.message });
   }
 });
 
