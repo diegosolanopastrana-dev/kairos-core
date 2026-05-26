@@ -283,13 +283,16 @@ app.get('/pdf/informe-mensual', async (req, res) => {
 // IDENTIFICAR USUARIO — Middleware de identidad
 app.get('/identificar', async (req, res) => {
   const telefono = req.query.telefono || req.query.numero || '';
-  if (!telefono) {
-    return res.json({ ok: false, error: 'TELEFONO_REQUERIDO' });
-  }
+  if (!telefono) return res.json({ ok: false, rol: 'DESCONOCIDO', error: 'TELEFONO_REQUERIDO' });
   const resultado = await identificarUsuario(telefono);
-  res.json(resultado);
-});
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`EDOAI Core v4.0.0 corriendo en puerto ${PORT}`);
+  if (resultado.ok) {
+    res.json({
+      ok: true,
+      rol: resultado.usuario.rol,
+      nombre: resultado.usuario.nombre,
+      usuario: resultado.usuario
+    });
+  } else {
+    res.json({ ok: false, rol: 'DESCONOCIDO', error: resultado.error });
+  }
 });
