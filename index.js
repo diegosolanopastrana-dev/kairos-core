@@ -245,7 +245,19 @@ app.get('/pdf/informe-mensual', async (req, res) => {
     res.status(500).send('Error al generar el PDF.');
   }
 });
+// PING TEST — sin llamadas externas
+app.get('/ping-test', (req, res) => {
+  console.log('PING TEST OK');
+  res.json({ ok: true, mensaje: 'ping ok' });
+});
 
+// FAKE IDENTIFICAR — sin Apps Script
+app.get('/fake-identificar', async (req, res) => {
+  console.log('FAKE IDENTIFICAR inicio');
+  await new Promise(r => setTimeout(r, 1000));
+  console.log('FAKE IDENTIFICAR fin');
+  res.json({ ok: true, usuario: { rol: 'PARROQUIA' } });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`EDOAI Core v4.1.0 corriendo en puerto ${PORT}`);

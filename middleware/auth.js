@@ -8,11 +8,16 @@ async function obtenerContextoUsuario(telefono) {
     return { ok: false, error: 'TELEFONO_INVALIDO' };
   }
   try {
+    console.log('[auth] Llamando Apps Script para:', tel);
     const response = await axios.get(APPS_SCRIPT_URL, {
       params: { accion: 'identificar_usuario', telefono: tel },
-      timeout: 10000
+      timeout: 25000,
+      maxRedirects: 5,
+      headers: { 'Accept': 'application/json' }
     });
+    console.log('[auth] Status:', response.status);
     const data = response.data;
+    console.log('[auth] ok:', data.ok);
     if (!data.ok) {
       return { ok: false, error: data.error || 'USUARIO_NO_AUTORIZADO' };
     }
@@ -26,8 +31,8 @@ async function obtenerContextoUsuario(telefono) {
       estado:       data.estado
     };
   } catch (err) {
-    console.error('Auth error:', err.message);
-    return { ok: false, error: 'SERVICIO_IDENTIDAD_NO_DISPONIBLE' };
+    console.error('[auth] Error:', err.code, err.message);
+    return { ok: false, error: 'SERVICIO_IDENTIDAD_NO_DISPONIBLE', detalle: err.message };
   }
 }
 
