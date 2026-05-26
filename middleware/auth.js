@@ -31,7 +31,4 @@ async function obtenerContextoUsuario(telefono) {
   }
 }
 
-// Alias para compatibilidad
-const identificarUsuario = obtenerContextoUsuario;
-
-module.exports = { obtenerContextoUsuario, identificarUsuario };
+module.exports = { obtenerContextoUsuario };
